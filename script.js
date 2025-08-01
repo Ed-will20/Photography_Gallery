@@ -169,6 +169,125 @@ function downloadPhoto(photoId) {
     document.body.removeChild(link);
 }
 
+// Export all gallery data as JSON
+function exportData() {
+    const exportData = {
+        albums: albums,
+        photos: photos,
+        exportDate: new Date().toISOString(),
+        version: "1.0"
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `photo-gallery-backup-${new Date().toISOString().split('T')[0]}.json`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the blob URL
+    URL.revokeObjectURL(link.href);
+    
+    alert('Gallery exported successfully! You can import this file on any browser.');
+}
+
+// Import gallery data from JSON file
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.json')) {
+        alert('Please select a valid JSON file.');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            // Validate the imported data structure
+            if (!importedData.albums || !importedData.photos) {
+                throw new Error('Invalid gallery data format');
+            }
+            
+            // Ask user if they want to merge or replace
+            const shouldMerge = confirm(
+                'Do you want to merge with existing photos?\n\n' +
+                'Click "OK" to merge (keep existing + add imported)\n' +
+                'Click "Cancel" to replace (delete existing + import only)'
+            );
+            
+            if (shouldMerge) {
+                // Merge data
+                mergeImportedData(importedData);
+            } else {
+                // Replace data
+                albums = importedData.albums;
+                photos = importedData.photos;
+            }
+            
+            // Ensure 'All Photos' album exists and is populated
+            if (!albums['All Photos']) {
+                albums['All Photos'] = [];
+            }
+            albums['All Photos'] = [...photos];
+            
+            // Save to localStorage and update UI
+            saveToStorage();
+            updateStats();
+            updateAlbumSelect();
+            updateAlbumTabs();
+            displayPhotos();
+            
+            alert(`Gallery imported successfully!\nImported ${importedData.photos.length} photos from ${Object.keys(importedData.albums).length - 1} albums.`);
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            alert('Error importing gallery data. Please check the file format.');
+        }
+    };
+    
+    reader.readAsText(file);
+    event.target.value = ''; // Reset file input
+}
+
+// Helper function to merge imported data with existing data
+function mergeImportedData(importedData) {
+    // Create a map of existing photo IDs to avoid duplicates
+    const existingPhotoIds = new Set(photos.map(p => p.id));
+    
+    // Add new photos that don't already exist
+    importedData.photos.forEach(photo => {
+        if (!existingPhotoIds.has(photo.id)) {
+            photos.push(photo);
+            albums['All Photos'].push(photo);
+        }
+    });
+    
+    // Merge albums
+    Object.keys(importedData.albums).forEach(albumName => {
+        if (albumName === 'All Photos') return; // Skip 'All Photos', we handle it separately
+        
+        if (!albums[albumName]) {
+            // Create new album
+            albums[albumName] = [];
+        }
+        
+        // Add photos to album if they don't already exist
+        importedData.albums[albumName].forEach(photo => {
+            const photoExists = albums[albumName].some(p => p.id === photo.id);
+            if (!photoExists && !existingPhotoIds.has(photo.id)) {
+                albums[albumName].push(photo);
+            }
+        });
+    });
+}
+
 // Download current photo from modal
 function downloadCurrentPhoto() {
     if (currentAlbumPhotos.length === 0) return;
