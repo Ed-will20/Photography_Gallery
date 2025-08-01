@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography Gallery</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📸 Photography Gallery</h1>
+            <p class="subtitle">Capture, Organize, and Showcase Your Memories</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="totalPhotos">0</div>
+                <div class="stat-label">Total Photos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="totalAlbums">0</div>
+                <div class="stat-label">Albums</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="form-group">
+                <label for="albumName">Create New Album:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="albumName" placeholder="Enter album name (e.g., Vacation, Wedding, Nature)">
+                    <button onclick="createAlbum()">Create Album</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="photoUpload">Upload Photos:</label>
+                <input type="file" id="photoUpload" accept="image/*" multiple>
+            </div>
+
+            <div class="form-group">
+                <label for="albumSelect">Select Album for Upload:</label>
+                <select id="albumSelect">
+                    <option value="">Select an album...</option>
+                </select>
+            </div>
+
+            <button onclick="uploadPhotos()">Upload Photos</button>
+            <button onclick="showAllPhotos()" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">Show All Photos</button>
+        </div>
+
+        <div class="album-selector" id="albumTabs"></div>
+
+        <div class="gallery" id="gallery"></div>
+
+        <!-- Modal for full image view -->
+        <div id="imageModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div class="modal-actions">
+                    <button class="modal-action-btn modal-download-btn" id="modalDownloadBtn" onclick="downloadCurrentPhoto()" title="Download photo">📥</button>
+                </div>
+                <button class="nav-arrow prev" id="prevBtn" onclick="navigateImage(-1)">‹</button>
+                <img class="modal-image" id="modalImage" src="" alt="">
+                <button class="nav-arrow next" id="nextBtn" onclick="navigateImage(1)">›</button>
+                <div class="modal-info">
+                    <div class="modal-photo-name" id="modalPhotoName"></div>
+                    <div class="modal-photo-details" id="modalPhotoDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
