@@ -47,6 +47,9 @@
 
             <button onclick="uploadPhotos()">Upload Photos</button>
             <button onclick="showAllPhotos()" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">Show All Photos</button>
+            <button onclick="exportData()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">Export Gallery</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+            <button onclick="document.getElementById('importFile').click()" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);">Import Gallery</button>
         </div>
 
         <div class="album-selector" id="albumTabs"></div>
