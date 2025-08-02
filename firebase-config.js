@@ -70,4 +70,5 @@ if (document.readyState === 'loading') {
 } else {
   // DOM already loaded
   setTimeout(initializeFirebaseServices, 100);
+  
 }
