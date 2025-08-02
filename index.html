@@ -1,80 +1,134 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photography Gallery</title>
+    <title>Photography Gallery - Cloud Sync</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase SDK - Load in correct order -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📸 Photography Gallery</h1>
-            <p class="subtitle">Capture, Organize, and Showcase Your Memories</p>
-        </header>
-
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-number" id="totalPhotos">0</div>
-                <div class="stat-label">Total Photos</div>
-            </div>
-            <div class="stat">
-                <div class="stat-number" id="totalAlbums">0</div>
-                <div class="stat-label">Albums</div>
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-section">
+            <div class="auth-card">
+                <h2>📸 Photography Gallery</h2>
+                <p>Sign in to sync your photos across all devices</p>
+                <button id="signInBtn" class="auth-btn">Sign In with Google</button>
+                <p class="auth-note">Your photos will be securely stored in the cloud</p>
             </div>
         </div>
 
-        <div class="controls">
-            <div class="form-group">
-                <label for="albumName">Create New Album:</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="albumName" placeholder="Enter album name (e.g., Vacation, Wedding, Nature)">
-                    <button onclick="createAlbum()">Create Album</button>
+        <!-- Main Gallery Section -->
+        <div id="gallerySection" class="gallery-section" style="display: none;">
+            <header>
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1>📸 Photography Gallery</h1>
+                        <p class="subtitle">Capture, Organize, and Showcase Your Memories</p>
+                    </div>
+                    <div class="header-right">
+                        <div class="user-info">
+                            <img id="userPhoto" class="user-photo" src="" alt="User">
+                            <span id="userName"></span>
+                            <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Sync Status -->
+            <div id="syncStatus" class="sync-status">
+                <span id="syncIndicator" class="sync-indicator">🟢</span>
+                <span id="syncText">Synced</span>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number" id="totalPhotos">0</div>
+                    <div class="stat-label">Total Photos</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="totalAlbums">0</div>
+                    <div class="stat-label">Albums</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="cloudStorage">0 MB</div>
+                    <div class="stat-label">Cloud Storage</div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="photoUpload">Upload Photos:</label>
-                <input type="file" id="photoUpload" accept="image/*" multiple>
-            </div>
-
-            <div class="form-group">
-                <label for="albumSelect">Select Album for Upload:</label>
-                <select id="albumSelect">
-                    <option value="">Select an album...</option>
-                </select>
-            </div>
-
-            <button onclick="uploadPhotos()">Upload Photos</button>
-            <button onclick="showAllPhotos()" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">Show All Photos</button>
-            <button onclick="exportData()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">Export Gallery</button>
-            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-            <button onclick="document.getElementById('importFile').click()" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);">Import Gallery</button>
-        </div>
-
-        <div class="album-selector" id="albumTabs"></div>
-
-        <div class="gallery" id="gallery"></div>
-
-        <!-- Modal for full image view -->
-        <div id="imageModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <div class="modal-actions">
-                    <button class="modal-action-btn modal-download-btn" id="modalDownloadBtn" onclick="downloadCurrentPhoto()" title="Download photo">📥</button>
-                    <button class="modal-action-btn modal-favorite-btn" id="modalFavoriteBtn" onclick="toggleCurrentPhotoFavorite()" title="Toggle favorite">🤍</button>
+            <div class="controls">
+                <div class="form-group">
+                    <label for="albumName">Create New Album:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="albumName" placeholder="Enter album name (e.g., Vacation, Wedding, Nature)">
+                        <button onclick="createAlbum()">Create Album</button>
+                    </div>
                 </div>
-                <button class="nav-arrow prev" id="prevBtn" onclick="navigateImage(-1)">‹</button>
-                <img class="modal-image" id="modalImage" src="" alt="">
-                <button class="nav-arrow next" id="nextBtn" onclick="navigateImage(1)">›</button>
-                <div class="modal-info">
-                    <div class="modal-photo-name" id="modalPhotoName"></div>
-                    <div class="modal-photo-details" id="modalPhotoDetails"></div>
+
+                <div class="form-group">
+                    <label for="photoUpload">Upload Photos:</label>
+                    <input type="file" id="photoUpload" accept="image/*" multiple>
+                    <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span id="progressText">Uploading...</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="albumSelect">Select Album for Upload:</label>
+                    <select id="albumSelect">
+                        <option value="">Select an album...</option>
+                    </select>
+                </div>
+
+                <button onclick="uploadPhotos()" id="uploadBtn">Upload Photos</button>
+                <button onclick="showAllPhotos()" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);">Show All Photos</button>
+                <button onclick="exportData()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">Export Gallery</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                <button onclick="document.getElementById('importFile').click()" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);">Import Gallery</button>
+            </div>
+
+            <div class="album-selector" id="albumTabs"></div>
+
+            <div class="gallery" id="gallery">
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Loading your photos...</p>
+                </div>
+            </div>
+
+            <!-- Modal for full image view -->
+            <div id="imageModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal()">&times;</span>
+                    <div class="modal-actions">
+                        <button class="modal-action-btn modal-download-btn" id="modalDownloadBtn" onclick="downloadCurrentPhoto()" title="Download photo">📥</button>
+                        <button class="modal-action-btn modal-favorite-btn" id="modalFavoriteBtn" onclick="toggleCurrentPhotoFavorite()" title="Toggle favorite">🤍</button>
+                        <button class="modal-action-btn modal-delete-btn" onclick="deleteCurrentPhoto()" title="Delete photo">🗑️</button>
+                    </div>
+                    <button class="nav-arrow prev" id="prevBtn" onclick="navigateImage(-1)">‹</button>
+                    <img class="modal-image" id="modalImage" src="" alt="">
+                    <button class="nav-arrow next" id="nextBtn" onclick="navigateImage(1)">›</button>
+                    <div class="modal-info">
+                        <div class="modal-photo-name" id="modalPhotoName"></div>
+                        <div class="modal-photo-details" id="modalPhotoDetails"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Load scripts in correct order -->
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
