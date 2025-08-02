@@ -13,13 +13,20 @@ function loadFromStorage() {
         
         if (savedAlbums) {
             albums = JSON.parse(savedAlbums);
-        } else {
-            albums['All Photos'] = [];
         }
         
         if (savedPhotos) {
             photos = JSON.parse(savedPhotos);
         }
+        
+        // Ensure 'All Photos' album exists and is populated correctly
+        if (!albums['All Photos']) {
+            albums['All Photos'] = [];
+        }
+        
+        // Rebuild 'All Photos' from the photos array to ensure consistency
+        albums['All Photos'] = [...photos];
+        
     } catch (error) {
         console.error('Error loading from storage:', error);
         albums = { 'All Photos': [] };
@@ -37,10 +44,13 @@ function saveToStorage() {
     }
 }
 
-// Initialize with a default album if none exists
+// Initialize with default albums if none exist
 function initializeAlbums() {
     if (!albums['All Photos']) {
         albums['All Photos'] = [];
+    }
+    if (!albums['Favorites']) {
+        albums['Favorites'] = [];
     }
 }
 
@@ -93,8 +103,18 @@ function updateAlbumTabs() {
     Object.keys(albums).forEach(albumName => {
         const tab = document.createElement('div');
         tab.className = 'album-tab';
-        tab.textContent = `${albumName} (${albums[albumName].length})`;
-        tab.onclick = () => showAlbum(albumName);
+        
+        // Add delete button for custom albums (not 'All Photos' or 'Favorites')
+        if (albumName !== 'All Photos' && albumName !== 'Favorites') {
+            tab.innerHTML = `
+                <span onclick="showAlbum('${albumName}')">${albumName} (${albums[albumName].length})</span>
+                <button class="album-delete-btn" onclick="event.stopPropagation(); deleteAlbum('${albumName}')" title="Delete album">×</button>
+            `;
+        } else {
+            tab.textContent = `${albumName} (${albums[albumName].length})`;
+            tab.onclick = () => showAlbum(albumName);
+        }
+        
         if (albumName === currentAlbum) {
             tab.classList.add('active');
         }
@@ -326,8 +346,13 @@ function displayPhotos() {
         <div class="photo-card">
             <img src="${photo.src}" alt="${photo.name}" onclick="openModal(${index})" style="cursor: pointer;">
             <div class="photo-actions">
-                <button class="action-btn download-btn" onclick="downloadPhoto('${photo.id}')" title="Download photo">📥</button>
-                <button class="action-btn delete-btn" onclick="deletePhoto('${photo.id}')" title="Delete photo">×</button>
+                <button class="action-btn favorite-btn ${albums['Favorites'].some(p => p.id === photo.id) ? 'favorited' : ''}" 
+                        onclick="event.stopPropagation(); toggleFavorite('${photo.id}')" 
+                        title="${albums['Favorites'].some(p => p.id === photo.id) ? 'Remove from favorites' : 'Add to favorites'}">
+                    ${albums['Favorites'].some(p => p.id === photo.id) ? '❤️' : '🤍'}
+                </button>
+                <button class="action-btn download-btn" onclick="event.stopPropagation(); downloadPhoto('${photo.id}')" title="Download photo">📥</button>
+                <button class="action-btn delete-btn" onclick="event.stopPropagation(); deletePhoto('${photo.id}')" title="Delete photo">×</button>
             </div>
             <div class="photo-info">
                 <div class="photo-name">${photo.name}</div>
@@ -362,6 +387,54 @@ function deletePhoto(photoId) {
     displayPhotos();
 }
 
+// Delete an album
+function deleteAlbum(albumName) {
+    if (albumName === 'All Photos' || albumName === 'Favorites') {
+        alert('Cannot delete system albums');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete the album "${albumName}"?\n\nThis will NOT delete the photos, they will remain in other albums.`)) {
+        return;
+    }
+    
+    // Remove the album
+    delete albums[albumName];
+    
+    // If we're currently viewing the deleted album, switch to All Photos
+    if (currentAlbum === albumName) {
+        currentAlbum = 'All Photos';
+    }
+    
+    saveToStorage();
+    updateAlbumSelect();
+    updateAlbumTabs();
+    updateStats();
+    displayPhotos();
+}
+
+// Toggle favorite status of a photo
+function toggleFavorite(photoId) {
+    const photo = photos.find(p => p.id === photoId);
+    if (!photo) return;
+    
+    const favoriteIndex = albums['Favorites'].findIndex(p => p.id === photoId);
+    
+    if (favoriteIndex === -1) {
+        // Add to favorites
+        albums['Favorites'].push(photo);
+        alert('Photo added to favorites!');
+    } else {
+        // Remove from favorites
+        albums['Favorites'].splice(favoriteIndex, 1);
+        alert('Photo removed from favorites!');
+    }
+    
+    saveToStorage();
+    updateAlbumTabs();
+    displayPhotos();
+}
+
 // Modal functions
 function openModal(index) {
     currentAlbumPhotos = currentAlbum ? albums[currentAlbum] : photos;
@@ -385,6 +458,12 @@ function showModalImage() {
     document.getElementById('modalPhotoDetails').textContent = 
         `Album: ${photo.album} • ${currentModalIndex + 1} of ${currentAlbumPhotos.length}`;
     
+    // Update favorite button in modal
+    const modalFavoriteBtn = document.getElementById('modalFavoriteBtn');
+    const isFavorited = albums['Favorites'].some(p => p.id === photo.id);
+    modalFavoriteBtn.textContent = isFavorited ? '❤️' : '🤍';
+    modalFavoriteBtn.title = isFavorited ? 'Remove from favorites' : 'Add to favorites';
+    
     // Update navigation buttons
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
@@ -399,6 +478,17 @@ function showModalImage() {
         prevBtn.style.display = 'flex';
         nextBtn.style.display = 'flex';
     }
+}
+
+// Toggle favorite for current photo in modal
+function toggleCurrentPhotoFavorite() {
+    if (currentAlbumPhotos.length === 0) return;
+    
+    const photo = currentAlbumPhotos[currentModalIndex];
+    toggleFavorite(photo.id);
+    
+    // Update the modal favorite button
+    showModalImage();
 }
 
 function navigateImage(direction) {
