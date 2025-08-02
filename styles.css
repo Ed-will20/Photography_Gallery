@@ -1,3 +1,4 @@
+/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -11,12 +12,14 @@ body {
     color: #333;
 }
 
+/* Layout Container */
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
 }
 
+/* Header Styles */
 header {
     text-align: center;
     margin-bottom: 40px;
@@ -34,6 +37,36 @@ h1 {
     opacity: 0.9;
 }
 
+/* Statistics Section */
+.stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.stat {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px 25px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Controls Section */
 .controls {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -54,7 +87,10 @@ label {
     color: #555;
 }
 
-input[type="text"], input[type="file"], select {
+/* Form Elements */
+input[type="text"], 
+input[type="file"], 
+select {
     width: 100%;
     padding: 12px;
     border: 2px solid #e0e0e0;
@@ -63,7 +99,8 @@ input[type="text"], input[type="file"], select {
     transition: all 0.3s ease;
 }
 
-input[type="text"]:focus, select:focus {
+input[type="text"]:focus, 
+select:focus {
     border-color: #667eea;
     outline: none;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -88,6 +125,7 @@ button:hover {
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
+/* Album Selector */
 .album-selector {
     display: flex;
     gap: 15px;
@@ -126,6 +164,8 @@ button:hover {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    margin: 0;
+    padding: 0;
 }
 
 .album-delete-btn:hover {
@@ -144,6 +184,7 @@ button:hover {
     border-color: transparent;
 }
 
+/* Gallery Grid */
 .gallery {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -151,6 +192,7 @@ button:hover {
     margin-top: 30px;
 }
 
+/* Photo Cards */
 .photo-card {
     background: white;
     border-radius: 15px;
@@ -187,6 +229,7 @@ button:hover {
     font-size: 14px;
 }
 
+/* Photo Actions */
 .photo-actions {
     position: absolute;
     top: 10px;
@@ -212,6 +255,8 @@ button:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0;
+    padding: 0;
 }
 
 .delete-btn {
@@ -252,6 +297,7 @@ button:hover {
     background: rgba(220, 20, 60, 1);
 }
 
+/* Empty State */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -263,35 +309,7 @@ button:hover {
     margin-bottom: 10px;
 }
 
-.stats {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.stat {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 15px 25px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.stat-number {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #667eea;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 5px;
-}
-
-/* Modal styles for full image view */
+/* Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -324,6 +342,33 @@ button:hover {
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
 
+/* Modal Controls */
+.close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1001;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    margin: 0;
+    padding: 0;
+}
+
+.close:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.1);
+}
+
 .modal-actions {
     position: absolute;
     top: 20px;
@@ -346,6 +391,8 @@ button:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0;
+    padding: 0;
 }
 
 .modal-action-btn:hover {
@@ -369,6 +416,7 @@ button:hover {
     background: rgba(255, 192, 203, 1);
 }
 
+/* Navigation Arrows */
 .nav-arrow {
     position: absolute;
     top: 50%;
@@ -387,6 +435,8 @@ button:hover {
     justify-content: center;
     transition: all 0.3s ease;
     z-index: 1001;
+    margin: 0;
+    padding: 0;
 }
 
 .nav-arrow:hover {
@@ -412,6 +462,7 @@ button:hover {
     transform: translateY(-50%);
 }
 
+/* Modal Info */
 .modal-info {
     position: absolute;
     bottom: 20px;
@@ -436,6 +487,7 @@ button:hover {
     opacity: 0.8;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
     .container {
         padding: 15px;
@@ -483,28 +535,4 @@ button:hover {
         bottom: 15px;
         padding: 10px 20px;
     }
-}
-
-.close {
-    position: absolute;
-    top: 20px;
-    right: 35px;
-    color: white;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 1001;
-    background: rgba(0,0,0,0.5);
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.close:hover {
-    background: rgba(255,255,255,0.2);
-    transform: scale(1.1);
 }
